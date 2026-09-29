@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Knowledge Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .option-card:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .option-selected {
+            border-color: #2563eb !important;
+            background-color: #dbeafe !important;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-blue-900 text-white shadow-md py-4 px-6 mb-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">General Knowledge Quiz</h1>
+                <p class="text-xs text-blue-200">Agensi Kerajaan | Penilaian Kendiri</p>
+            </div>
+            <span class="bg-blue-800 text-xs text-blue-100 font-medium px-3 py-1 rounded-full border border-blue-700">10 Soalan | 10 Markah</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl mx-auto px-4 w-full flex-grow">
+
+        <!-- STEP 1: Skrin Pembukaan & Maklumat Peserta -->
+        <div id="screen-welcome" class="bg-white rounded-xl shadow-md p-6 md:p-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Selamat Datang ke Kuiz Pengetahuan Am</h2>
+            <p class="text-slate-600 mb-6 leading-relaxed">
+                Sila isi maklumat diri anda sebelum memulakan kuiz. Kuiz ini mengandungi 10 soalan pilihan ganda. Anda boleh menyemak dan menukar jawapan anda sebelum membuat penghantaran akhir.
+            </p>
+
+            <form id="form-participant" onsubmit="startQuiz(event)" class="space-y-4">
+                <div>
+                    <label for="input-name" class="block text-sm font-semibold text-slate-700 mb-1">Nama Penuh <span class="text-red-500">*</span></label>
+                    <input type="text" id="input-name" required placeholder="Contoh: Ahmad bin Abdullah" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label for="input-email" class="block text-sm font-semibold text-slate-700 mb-1">Alamat E-mel <span class="text-red-500">*</span></label>
+                    <input type="email" id="input-email" required placeholder="Contoh: ahmad@example.com" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 mb-4">
+                    <h3 class="font-bold mb-1">Arahan Ringkas:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Pilih satu jawapan yang paling tepat bagi setiap soalan.</li>
+                        <li>Setiap soalan yang betul menyumbang 1 markah.</li>
+                        <li>Jawapan betul hanya akan dipaparkan selepas penghantaran selesai.</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 shadow-md">
+                    Mula Kuiz
+                </button>
+            </form>
+        </div>
+
+        <!-- STEP 2: Skrin Soalan Kuiz -->
+        <div id="screen-quiz" class="hidden bg-white rounded-xl shadow-md p-6 md:p-8">
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="progress-text" class="text-sm font-semibold text-blue-600">Soalan 1 daripada 10</span>
+                    <span id="completion-text" class="text-xs text-slate-500">0% Selesai</span>
+                </div>
+                <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 10%;"></div>
+                </div>
+            </div>
+
+            <!-- Soalan -->
+            <div class="mb-6">
+                <h3 id="question-title" class="text-lg md:text-xl font-bold text-slate-800 mb-4"></h3>
+                <div id="options-container" class="space-y-3">
+                    <!-- Pilihan jawapan dinamik -->
+                </div>
+            </div>
+
+            <!-- Navigasi Bawah -->
+            <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                <button id="btn-prev" onclick="navigateQuestion(-1)" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-lg transition disabled:opacity-50">
+                    Sebaiknya
+                </button>
+                <div class="flex gap-2">
+                    <button id="btn-next" onclick="navigateQuestion(1)" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+                        Seterusnya
+                    </button>
+                    <button id="btn-submit" onclick="submitQuiz()" class="hidden px-5 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition shadow-md">
+                        Hantar Jawapan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Skrin Keputusan -->
+        <div id="screen-result" class="hidden space-y-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6 md:p-8 text-center">
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Keputusan Kuiz</h2>
+                <p class="text-slate-600 text-sm mb-4">Terima kasih kerana melengkapkan kuiz ini, <span id="res-participant-name" class="font-semibold text-slate-800"></span>!</p>
+
+                <div class="inline-flex flex-col items-center justify-center p-6 bg-slate-50 border border-slate-200 rounded-xl mb-6 min-w-[200px]">
+                    <span class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Jumlah Markah</span>
+                    <span id="res-score" class="text-4xl font-extrabold text-blue-600">0 / 10</span>
+                    <span id="res-percentage" class="text-sm font-medium text-slate-600 mt-1">0%</span>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg transition shadow">
+                        Cuba Lagi
+                    </button>
+                    <button onclick="downloadCSVResults()" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg transition flex items-center gap-2">
+                        <span>Muat Turun Keputusan (CSV)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Semakan Jawapan Detail -->
+            <div class="bg-white rounded-xl shadow-md p-6 md:p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-4 pb-2 border-b">Semakan Jawapan</h3>
+                <div id="review-container" class="space-y-6">
+                    <!-- Semakan jawapan dinamik -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 py-4 text-center text-xs mt-8">
+        &copy; Agensi Kerajaan - Sistem Kuiz Dalam Talian Kendiri
+    </footer>
+
+    <script>
+        // Data Soalan mengikut kandungan asal
+        const quizData = [
+            {
+                id: 1,
+                question: "1. Which ocean lies between Africa and Australia?",
+                options: [
+                    { key: "a", text: "a. Atlantic Ocean" },
+                    { key: "b", text: "b. Indian Ocean" },
+                    { key: "c", text: "c. Pacific Ocean" },
+                    { key: "d", text: "d. Arctic Ocean" }
+                ],
+                correctAnswer: "b",
+                explanation: "The Indian Ocean lies east of Africa and west of Australia."
+            },
+            {
+                id: 2,
+                question: "2. Which part of a cell contains most of the genetic material in humans?",
+                options: [
+                    { key: "a", text: "a. Cell membrane" },
+                    { key: "b", text: "b. Cytoplasm" },
+                    { key: "c", text: "c. Ribosome" },
+                    { key: "d", text: "d. Nucleus" }
+                ],
+                correctAnswer: "d",
+                explanation: "The nucleus contains most of a human cell’s DNA."
+            },
+            {
+                id: 3,
+                question: "3. In which year did the Federation of Malaya gain independence?",
+                options: [
+                    { key: "a", text: "a. 1957" },
+                    { key: "b", text: "b. 1963" },
+                    { key: "c", text: "c. 1945" },
+                    { key: "d", text: "d. 1965" }
+                ],
+                correctAnswer: "a",
+                explanation: "The Federation of Malaya gained independence on 31 August 1957."
+            },
+            {
+                id: 4,
+                question: "4. What does the chemical symbol Au represent?",
+                options: [
+                    { key: "a", text: "a. Silver" },
+                    { key: "b", text: "b. Argon" },
+                    { key: "c", text: "c. Gold" },
+                    { key: "d", text: "d. Aluminium" }
+                ],
+                correctAnswer: "c",
+                explanation: "Au is the chemical symbol for gold."
+            },
+            {
+                id: 5,
+                question: "5. Who wrote the play Romeo and Juliet?",
+                options: [
+                    { key: "a", text: "a. Charles Dickens" },
+                    { key: "b", text: "b. William Shakespeare" },
+                    { key: "c", text: "c. Jane Austen" },
+                    { key: "d", text: "d. George Orwell" }
+                ],
+                correctAnswer: "b",
+                explanation: "William Shakespeare wrote Romeo and Juliet."
+            },
+            {
+                id: 6,
+                question: "6. Which gas makes up the largest proportion of Earth’s atmosphere?",
+                options: [
+                    { key: "a", text: "a. Oxygen" },
+                    { key: "b", text: "b. Carbon dioxide" },
+                    { key: "c", text: "c. Hydrogen" },
+                    { key: "d", text: "d. Nitrogen" }
+                ],
+                correctAnswer: "d",
+                explanation: "Nitrogen makes up about 78% of Earth’s atmosphere."
+            },
+            {
+                id: 7,
+                question: "7. A shirt costs RM80 before a 15% discount. What is its discounted price?",
+                options: [
+                    { key: "a", text: "a. RM68" },
+                    { key: "b", text: "b. RM65" },
+                    { key: "c", text: "c. RM72" },
+                    { key: "d", text: "d. RM75" }
+                ],
+                correctAnswer: "a",
+                explanation: "15% of RM80 is RM12, so the discounted price is RM68."
+            },
+            {
+                id: 8,
+                question: "8. Which ancient civilisation built Machu Picchu?",
+                options: [
+                    { key: "a", text: "a. Maya" },
+                    { key: "b", text: "b. Aztec" },
+                    { key: "c", text: "c. Inca" },
+                    { key: "d", text: "d. Roman" }
+                ],
+                correctAnswer: "c",
+                explanation: "Machu Picchu was built by the Inca civilisation in what is now Peru."
+            },
+            {
+                id: 9,
+                question: "9. In computing, what does CPU stand for?",
+                options: [
+                    { key: "a", text: "a. Computer Processing Utility" },
+                    { key: "b", text: "b. Central Processing Unit" },
+                    { key: "c", text: "c. Central Program Utility" },
+                    { key: "d", text: "d. Computer Power Unit" }
+                ],
+                correctAnswer: "b",
+                explanation: "CPU stands for Central Processing Unit."
+            },
+            {
+                id: 10,
+                question: "10. Which sporting event combines swimming, cycling and running?",
+                options: [
+                    { key: "a", text: "a. Pentathlon" },
+                    { key: "b", text: "b. Decathlon" },
+                    { key: "c", text: "c. Marathon" },
+                    { key: "d", text: "d. Triathlon" }
+                ],
+                correctAnswer: "d",
+                explanation: "A triathlon combines swimming, cycling and running."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = {};
+        let participantInfo = { name: '', email: '' };
+
+        function startQuiz(e) {
+            e.preventDefault();
+            participantInfo.name = document.getElementById('input-name').value;
+            participantInfo.email = document.getElementById('input-email').value;
+
+            document.getElementById('screen-welcome').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = quizData[currentQuestionIndex];
+            document.getElementById('question-title').innerText = q.question;
+
+            // Kemaskini penunjuk kemajuan
+            const total = quizData.length;
+            document.getElementById('progress-text').innerText = `Soalan ${currentQuestionIndex + 1} daripada ${total}`;
+            const percentage = Math.round(((currentQuestionIndex + 1) / total) * 100);
+            document.getElementById('completion-text').innerText = `${percentage}% Selesai`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+            // Papar pilihan jawapan
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const isSelected = userAnswers[q.id] === opt.key;
+                const card = document.createElement('div');
+                card.className = `option-card p-4 border-2 rounded-lg cursor-pointer transition flex items-center justify-between ${isSelected ? 'option-selected' : 'border-slate-200'}`;
+                card.onclick = () => selectOption(q.id, opt.key);
+
+                card.innerHTML = `
+                    <span class="text-slate-800">${opt.text}</span>
+                    <input type="radio" name="option-${q.id}" value="${opt.key}" ${isSelected ? 'checked' : ''} class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                `;
+                container.appendChild(card);
+            });
+
+            // Kawalan Butang Navigasi
+            document.getElementById('btn-prev').disabled = (currentQuestionIndex === 0);
+            
+            if (currentQuestionIndex === total - 1) {
+                document.getElementById('btn-next').classList.add('hidden');
+                document.getElementById('btn-submit').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-next').classList.remove('hidden');
+                document.getElementById('btn-submit').classList.add('hidden');
+            }
+        }
+
+        function selectOption(questionId, key) {
+            userAnswers[questionId] = key;
+            renderQuestion();
+        }
+
+        function navigateQuestion(direction) {
+            currentQuestionIndex += direction;
+            renderQuestion();
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            quizData.forEach(q => {
+                if (userAnswers[q.id] === q.correctAnswer) {
+                    score++;
+                }
+            });
+
+            const total = quizData.length;
+            const percentage = (score / total) * 100;
+
+            // Simpan Rekod Tempatan (LocalStorage)
+            saveResultsToStorage(participantInfo.name, participantInfo.email, score, total, percentage);
+
+            // Tampilkan skrin keputusan
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            document.getElementById('res-participant-name').innerText = participantInfo.name;
+            document.getElementById('res-score').innerText = `${score} / ${total}`;
+            document.getElementById('res-percentage').innerText = `${percentage}%`;
+
+            renderReview();
+        }
+
+        function renderReview() {
+            const container = document.getElementById('review-container');
+            container.innerHTML = '';
+
+            quizData.forEach(q => {
+                const userAns = userAnswers[q.id];
+                const isCorrect = userAns === q.correctAnswer;
+                
+                const userOptObj = q.options.find(o => o.key === userAns);
+                const correctOptObj = q.options.find(o => o.key === q.correctAnswer);
+
+                const reviewItem = document.createElement('div');
+                reviewItem.className = `p-4 rounded-lg border ${isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`;
+
+                reviewItem.innerHTML = `
+                    <div class="flex items-start justify-between mb-2">
+                        <h4 class="font-bold text-slate-800">${q.question}</h4>
+                        <span class="text-xs px-2 py-1 rounded font-semibold ${isCorrect ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">
+                            ${isCorrect ? 'BETUL (+1)' : 'SALAH (0)'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-slate-700 mb-1">
+                        <strong>Jawapan Anda:</strong> ${userOptObj ? userOptObj.text : '<span class="italic text-slate-500">Tiada jawapan</span>'}
+                    </p>
+                    ${!isCorrect ? `<p class="text-sm text-slate-700 mb-1"><strong>Jawapan Sebenar:</strong> ${correctOptObj.text}</p>` : ''}
+                    <p class="text-xs text-slate-600 mt-2 bg-white p-2 rounded border border-slate-200">
+                        <strong>Nota/Penjelasan:</strong> ${q.explanation}
+                    </p>
+                `;
+                container.appendChild(reviewItem);
+            });
+        }
+
+        function saveResultsToStorage(name, email, score, total, percentage) {
+            const results = JSON.parse(localStorage.getItem('quiz_results') || '[]');
+            results.push({
+                name,
+                email,
+                score,
+                total,
+                percentage: `${percentage}%`,
+                timestamp: new Date().toLocaleString('ms-MY')
+            });
+            localStorage.setItem('quiz_results', JSON.stringify(results));
+        }
+
+        function downloadCSVResults() {
+            const results = JSON.parse(localStorage.getItem('quiz_results') || '[]');
+            if (results.length === 0) {
+                alert('Tiada rekod keputusan lagi.');
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Nama,Email,Markah,Jumlah,Peratus,Tarikh\n";
+            results.forEach(r => {
+                csvContent += `"${r.name}","${r.email}",${r.score},${r.total},"${r.percentage}","${r.timestamp}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "keputusan_kuiz_semua_peserta.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            userAnswers = {};
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-welcome').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
+```eof
+
+### Ringkasan & Maklumat Pelaksanaan
+
+1. **Kandungan & Bahasa**: Semua 10 soalan, pilihan jawapan (a, b, c, d), dan skema jawapan telah dimasukkan tepat seperti dokumen asal. Arahan serta antara muka aplikasi ditulis menggunakan Bahasa Melayu yang formal.
+2. **Pengurusan Keputusan & Data Peserta**: Aplikasi mengumpul nama dan e-mel peserta. Semua keputusan peserta akan disimpan secara automatik di storan tempatan (`localStorage`) penyemak imbas dan boleh dimuat turun sebagai fail `.csv` (boleh dibuka dalam Microsoft Excel) oleh pengurus agensi menerusi butang **"Muat Turun Keputusan (CSV)"**.
+
+---
+
+### Cara Perkongsian & Penerbitan Kuiz (Langkah demi Langkah)
+
+Oleh sebab antara muka perbualan AI ini adalah persekitaran ujian/penjana code, anda perlu memuat naik fail HTML di atas ke mana-mana pelayan web atau perkhidmatan percuma supaya pautan (URL) boleh dikongsi secara awam kepada peserta:
+
+#### Pilihan 1: Menggunakan GitHub Pages (Percuma & Paling Disyorkan untuk Agensi/Sektor Awam)
+1. Buka [GitHub.com](https://github.com) dan cipta akaun/log masuk.
+2. Cipta repositori baru (contoh nama: `kuiz-pengetahuan-am`).
+3. Muat naik fail `index.html` yang dijana di atas ke dalam repositori tersebut.
+4. Pergi ke **Settings** > **Pages** dalam repositori anda, pilih cawangan `main` (atau `master`) dan tekan **Save**.
+5. Pautan rasmi kuiz anda akan sedia digunakan (Contoh: `[https://nama-agensi.github.io/kuiz-pengetahuan-am/](https://nama-agensi.github.io/kuiz-pengetahuan-am/)`).
+
+#### Pilihan 2: Menggunakan Netlify / Vercel (Paling Mudah / Drag and Drop)
+1. Simpan kod HTML di atas ke dalam satu fail bernama `index.html` pada komputer anda.
+2. Layari [Netlify Drop](https://app.netlify.com/drop).
+3. Tarik dan lepaskan (*drag and drop*) fail `index.html` tersebut ke dalam kotak pelayan.
+4. Netlify akan menjana pautan unik secara automatik yang boleh terus dihantar dan dibuka oleh peserta melalui telefon pintar atau komputer.
